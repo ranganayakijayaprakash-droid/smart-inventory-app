@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Smart Inventory System</title>
+
+    <link rel="stylesheet" href="inventory.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>📦 AI Smart Inventory</h1>
+        <a href="index.html" class="home-btn">← Back to Home</a>
+    </header>
+
+    <main>
+
+        <section class="welcome">
+            <h2>Inventory Dashboard</h2>
+            <p>Manage your products and monitor stock levels.</p>
+        </section>
+
+        <!-- Dashboard Cards -->
+        <section class="dashboard">
+
+            <div class="card">
+                <h3>Total Products</h3>
+                <p id="totalProducts">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Total Stock</h3>
+                <p id="totalStock">0</p>
+            </div>
+
+            <div class="card warning">
+                <h3>Low Stock</h3>
+                <p id="lowStock">0</p>
+            </div>
+
+            <div class="card danger">
+                <h3>Out of Stock</h3>
+                <p id="outOfStock">0</p>
+            </div>
+
+        </section>
+
+        <!-- Add Product -->
+        <section class="product-form">
+
+            <h2>➕ Add New Product</h2>
+
+            <form id="productForm">
+
+                <input
+                    type="text"
+                    id="productName"
+                    placeholder="Product Name"
+                    required
+                >
+
+                <input
+                    type="text"
+                    id="productId"
+                    placeholder="Product ID"
+                    required
+                >
+
+                <input
+                    type="text"
+                    id="category"
+                    placeholder="Category"
+                    required
+                >
+
+                <input
+                    type="number"
+                    id="quantity"
+                    placeholder="Quantity"
+                    min="0"
+                    step="1"
+                    required
+                >
+
+                <input
+                    type="number"
+                    id="price"
+                    placeholder="Price (₹)"
+                    min="0"
+                    step="0.01"
+                    required
+                >
+
+                <button type="submit" id="submitBtn">
+                    Add Product
+                </button>
+
+            </form>
+
+        </section>
+
+        <!-- Product List -->
+        <section class="product-list">
+
+            <h2>📋 Product Inventory</h2>
+
+            <input
+                type="search"
+                id="searchInput"
+                placeholder="🔍 Search by product name or ID..."
+            >
+
+            <div class="table-container">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="productTable"></tbody>
+                </table>
+
+            </div>
+
+            <p id="emptyMessage">
+                No products added yet. Add your first product above!
+            </p>
+
+        </section>
+
+        <!-- Seasonal Sales Suggestions -->
+        <section class="product-form">
+            <h2>🪔 Seasonal Sales Suggestions</h2>
+            <div id="seasonalSuggestions">
+                Loading seasonal suggestions...
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>AI Smart Inventory System | Project Dashboard</p>
+    </footer>
+
+    <script>
+        const API_URL = "http://localhost:8080/api/products";
+        let notifications = [];
+
+        // ==================================
+        // 1. NOTIFICATION SYSTEM (Bell & UI)
+        // ==================================
+
+        function initNotificationUI() {
+            if (document.getElementById("notifContainer")) return;
+
+            const container = document.createElement("div");
+            container.id = "notifContainer";
+            container.style.cssText = "position: fixed; top: 20px; right: 20px; z-index: 1000; font-family: sans-serif;";
+
+            container.innerHTML = `
+                <div id="bellBtn" style="background: #007bff; color: white; padding: 10px 15px; border-radius: 50%; cursor: pointer; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    🔔 <span id="notifBadge" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; display: none;">0</span>
+                </div>
+                <div id="notifDropdown" style="display: none; position: absolute; right: 0; top: 50px; width: 320px; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 400px; overflow-y: auto;">
+                    <div style="padding: 12px; background: #f8f9fa; font-weight: bold; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between;">
+                        <span>Notifications & Alerts</span>
+                        <span style="cursor: pointer; color: #007bff; font-size: 12px;" onclick="clearNotifications()">Clear All</span>
+                    </div>
+                    <div id="notifList" style="padding: 10px; color: #333; font-size: 13px;">
+                        <p style="text-align: center; color: #777;">No new notifications</p>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(container);
+
+            document.getElementById("bellBtn").addEventListener("click", () => {
+                const dropdown = document.getElementById("notifDropdown");
+                dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+            });
+        }
+
+        function addNotification(message, type = "info") {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            notifications.unshift({ message, type, time });
+            updateNotificationUI();
+        }
+
+        function updateNotificationUI() {
+            const notifList = document.getElementById("notifList");
+            const notifBadge = document.getElementById("notifBadge");
+
+            if (!notifList) return;
+
+            if (notifications.length === 0) {
+                notifList.innerHTML = `<p style="text-align: center; color: #777;">No new notifications</p>`;
+                notifBadge.style.display = "none";
+                return;
+            }
+
+            notifBadge.style.display = "inline-block";
+            notifBadge.innerText = notifications.length;
+
+            notifList.innerHTML = "";
+            notifications.forEach(n => {
+                let bg = "#e2e3e5";
+                if (n.type === "success") bg = "#d4edda";
+                if (n.type === "error" || n.type === "warning") bg = "#f8d7da";
+                if (n.type === "sale") bg = "#cce5ff";
+
+                const item = document.createElement("div");
+                item.style.cssText = `padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; background: ${bg}; border-left: 4px solid ${n.type === 'success' ? '#28a745' : n.type === 'error' ? '#dc3545' : '#007bff'};`;
+                item.innerHTML = `<div>${n.message}</div><div style="font-size: 10px; color: #555; text-align: right; margin-top: 2px;">${n.time}</div>`;
+                notifList.appendChild(item);
+            });
+        }
+
+        function clearNotifications() {
+            notifications = [];
+            updateNotificationUI();
+        }
+
+        // ==================================
+        // 2. LOAD PRODUCTS & LOW STOCK ALERTS
+        // ==================================
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(API_URL);
+                const products = await response.json();
+
+                const productTable = document.getElementById("productTable");
+                if (productTable) {
+                    productTable.innerHTML = "";
+                    let lowStockCount = 0;
+                    let outStockCount = 0;
+                    let totalStockQty = 0;
+
+                    products.forEach(p => {
+                        const qty = p.quantity || 0;
+                        totalStockQty += qty;
+
+                        let status = "In Stock";
+                        let statusClass = "in-stock";
+
+                        if (qty === 0) {
+                            status = "Out of Stock";
+                            statusClass = "out-of-stock";
+                            outStockCount++;
+                        } else if (qty <= 5) {
+                            status = "Low Stock";
+                            statusClass = "low-stock";
+                            lowStockCount++;
+                        }
+
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${p.id || '-'}</td>
+                            <td>${p.name}</td>
+                            <td>General</td>
+                            <td>${qty}</td>
+                            <td>₹${p.price}</td>
+                            <td><span class="status ${statusClass}">${status}</span></td>
+                            <td>
+                                <button class="edit-btn"
+    onclick="simulateSale('${p.id}', '${p.name}', ${qty})">
+    Sell 1
+</button>
+                                <button
+    class="delete-btn"
+    onclick="deleteProduct(${p.id})">
+    Delete
+</button>
+                            </td>
+                        `;
+                        productTable.appendChild(row);
+                    });
+
+                    document.getElementById("totalProducts").textContent = products.length;
+                    document.getElementById("totalStock").textContent = totalStockQty;
+                    document.getElementById("lowStock").textContent = lowStockCount;
+                    document.getElementById("outOfStock").textContent = outStockCount;
+                    document.getElementById("emptyMessage").style.display = products.length === 0 ? "block" : "none";
+
+                    if (lowStockCount > 0) {
+                        addNotification(`⚠️ Low Stock Alert! ${lowStockCount} product(s) are running low (≤ 5 units).`, "warning");
+                    }
+
+                    renderSeasonalSuggestions(products);
+                }
+            } catch (error) {
+                console.error("Error loading products:", error);
+            }
+        }
+
+        // ==================================
+        // 3. ADD PRODUCT WITH NOTIFICATION
+        // ==================================
+
+        async function addProduct(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("productName").value.trim();
+            const quantity = parseInt(document.getElementById("quantity").value);
+            const price = parseFloat(document.getElementById("price").value);
+
+            if (!name || isNaN(quantity) || isNaN(price)) {
+                alert("Please fill all required fields correctly!");
+                return;
+            }
+
+            const newProduct = {
+                name: name,
+                quantity: quantity,
+                price: price
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(newProduct)
+                });
+
+                if (response.ok) {
+                    addNotification(`🔔 New Product Added Successfully! "${name}" — ${quantity} units added.`, "success");
+                    alert(`🔔 New Product Added Successfully! "${name}" — ${quantity} units added.`);
+                    
+                    document.getElementById("productForm").reset();
+                    loadProducts();
+                } else {
+                    alert("Failed to add product to backend!");
+                }
+            } catch (error) {
+                console.error("Error adding product:", error);
+            }
+        }
+
+        // ==================================
+       // SELL PRODUCT AND UPDATE STOCK
+async function simulateSale(productId, name, currentQty) {
+
+    if (currentQty <= 0) {
+        addNotification(
+            `🚨 ${name} is OUT OF STOCK! Cannot sell this product.`,
+            "error"
+        );
+
+        alert(`🚨 ${name} is OUT OF STOCK!`);
+        return;
+    }
+
+    // Sale notification
+    addNotification(
+        `🛒 ${name} sold successfully!`,
+        "success"
+    );
+
+    // If only one unit remains
+    if (currentQty === 1) {
+        addNotification(
+            `🚨 ${name} is now OUT OF STOCK! Please restock.`,
+            "error"
+        );
+    } else if (currentQty - 1 <= 5) {
+        addNotification(
+            `⚠️ ${name} has only ${currentQty - 1} units left!`,
+            "warning"
+        );
+    }
+
+    alert(
+        `🛒 ${name} sold!\n` +
+        `Remaining stock: ${currentQty - 1}`
+    );
+
+    // Note:
+    // Stock must also be updated in the Java backend.
+}
+
+        // ==================================
+       // DELETE PRODUCT
+async function deleteProduct(id) {
+    const confirmed = confirm(
+        "Are you sure you want to delete this product?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(
+            `${API_URL}/${encodeURIComponent(id)}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+
+            throw new Error(
+                errorText || `HTTP Error: ${response.status}`
+            );
+        }
+
+        addNotification(
+            "🗑️ Product deleted successfully!",
+            "success"
+        );
+
+        alert("Product deleted successfully!");
+
+        await loadProducts();
+
+    } catch (error) {
+        console.error("Delete error:", error);
+
+        alert(
+            "Product delete aagala da!\n\n" +
+            error.message +
+            "\n\nJava backend-la DELETE API add pannanum."
+        );
+    }
+}
+        // ==================================
+        // 6. SEARCH & FILTER
+        // ==================================
+
+        function filterProducts() {
+            const input = document.getElementById("searchInput");
+            if (!input) return;
+
+            const searchText = input.value.toLowerCase().trim();
+            const rows = document.querySelectorAll("#productTable tr");
+
+            rows.forEach(function (row) {
+                const productId = row.cells[0]?.textContent.toLowerCase() || "";
+                const productName = row.cells[1]?.textContent.toLowerCase() || "";
+
+                row.style.display =
+                    productId.includes(searchText) || productName.includes(searchText)
+                        ? ""
+                        : "none";
+            });
+        }
+
+        // ==================================
+        // 7. SEASONAL SALES SUGGESTIONS
+        // ==================================
+
+        function renderSeasonalSuggestions(products) {
+            const container = document.getElementById("seasonalSuggestions");
+            if (!container) return;
+
+            const month = new Date().getMonth();
+            let message = "";
+
+            if (month === 9 || month === 10) {
+                message = "🪔 Diwali Season! Electronics and gifts-ku offers plan pannalaam.";
+            } else if (month === 11) {
+                message = "🎄 Year-End Sales! Gift items-ku special offers consider pannalaam.";
+            } else if (month === 0) {
+                message = "🎉 New Year Sales! Promotional offers plan pannalaam.";
+            } else {
+                message = "📈 Sales Suggestion: Review stock levels and plan offers.";
+            }
+
+            container.innerHTML = `<h3>💡 Sales Recommendation</h3><p>${message}</p>`;
+        }
+
+        // ==================================
+        // 8. PAGE INITIALIZATION
+        // ==================================
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initNotificationUI();
+
+            const productForm = document.getElementById("productForm");
+            if (productForm) {
+                productForm.addEventListener("submit", addProduct);
+            }
+
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.addEventListener("input", filterProducts);
+            }
+
+            loadProducts();
+        });
+    </script>
+</body>
+</html>

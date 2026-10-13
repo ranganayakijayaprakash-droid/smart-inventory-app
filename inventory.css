@@ -1,0 +1,266 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: #172554;
+    color: white;
+    padding: 22px 6%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+header h1 {
+    font-size: 25px;
+}
+
+.home-btn {
+    color: white;
+    text-decoration: none;
+    background: #2563eb;
+    padding: 11px 17px;
+    border-radius: 7px;
+}
+
+main {
+    max-width: 1200px;
+    width: 92%;
+    margin: 30px auto;
+}
+
+.welcome {
+    margin-bottom: 25px;
+}
+
+.welcome h2 {
+    font-size: 28px;
+    margin-bottom: 9px;
+}
+
+.welcome p {
+    color: #64748b;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    border-left: 5px solid #2563eb;
+    box-shadow: 0 4px 12px #0000000a;
+}
+
+.card h3 {
+    font-size: 15px;
+    color: #64748b;
+    margin-bottom: 15px;
+}
+
+.card p {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.card.warning {
+    border-left-color: #f59e0b;
+}
+
+.card.danger {
+    border-left-color: #ef4444;
+}
+
+.product-form,
+.product-list {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 12px #0000000a;
+}
+
+.product-form h2,
+.product-list h2 {
+    margin-bottom: 20px;
+    font-size: 21px;
+}
+
+#productForm {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font-size: 14px;
+    min-width: 0;
+}
+
+input:focus {
+    outline: 2px solid #93c5fd;
+    border-color: #2563eb;
+}
+
+#submitBtn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 13px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+#submitBtn:hover,
+.home-btn:hover {
+    background: #1d4ed8;
+}
+
+#searchInput {
+    max-width: 400px;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+}
+
+th,
+td {
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+th {
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.status {
+    display: inline-block;
+    padding: 6px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.in-stock {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.low-stock {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.out-of-stock {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.edit-btn,
+.delete-btn {
+    padding: 8px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 3px;
+}
+
+.edit-btn {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.delete-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+#emptyMessage {
+    text-align: center;
+    color: #64748b;
+    padding: 25px 5px;
+}
+
+footer {
+    text-align: center;
+    background: #172554;
+    color: white;
+    padding: 22px;
+    margin-top: 35px;
+}
+
+@media (max-width: 800px) {
+    .dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #productForm {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 500px) {
+    header h1 {
+        font-size: 20px;
+    }
+
+    main {
+        width: 94%;
+        margin-top: 22px;
+    }
+
+    .dashboard {
+        gap: 10px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .card p {
+        font-size: 25px;
+    }
+
+    #productForm {
+        grid-template-columns: 1fr;
+    }
+
+    .product-form,
+    .product-list {
+        padding: 17px;
+    }
+}
